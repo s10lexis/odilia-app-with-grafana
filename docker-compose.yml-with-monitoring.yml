@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  yelb-ui:
+    image: mreferre/yelb-ui:0.7
+    ports:
+      - "80:80"
+    environment:
+      - YELB_APPSERVER_ENDPOINT=http://yelb-appserver:4567
+    networks:
+      - odilia-net
+
+  yelb-appserver:
+    image: mreferre/yelb-appserver:0.5
+    environment:
+      - REDIS_SERVER_ENDPOINT=redis-server
+      - DATABASE_SERVER_ENDPOINT=yelb-db
+    networks:
+      - odilia-net
+
+  yelb-db:
+    image: mreferre/yelb-db:0.5
+    networks:
+      - odilia-net
+
+  redis-server:
+    image: redis:4.0.2
+    command: redis-server --appendonly yes
+    networks:
+      - odilia-net
+
+  grafana:
+    image: grafana/grafana:9.5.2
+    ports:
+      - "3000:3000"
+    networks:
+      - odilia-net
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:v2.46.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - odilia-net
+
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    ports:
+      - "9100:9100"
+    networks:
+      - odilia-net
+
+networks:
+  odilia-net:
+    driver: bridge
+
+volumes:
+  grafana-storage:
